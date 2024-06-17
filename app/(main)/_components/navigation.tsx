@@ -1,6 +1,9 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import { usePathname, useParams } from "next/navigation";
+import { useSearch } from "@/hooks/user-search";
+import { useSettings } from "@/hooks/use-settings";
+
 import { ElementRef, useEffect, useRef, useState } from "react";
 
 import {
@@ -28,12 +31,15 @@ import { api } from "@/convex/_generated/api";
 import UserItem from "@/app/(main)/_components/user-item";
 import Item from "@/app/(main)/_components/item";
 import DocumentList from "@/app/(main)/_components/document-list";
+import TrashBox from "@/app/(main)/_components/trash-box";
+import Navbar from "@/app/(main)/_components/navbar";
 
 const Navigation = () => {
   const documents = useQuery(api.documents.get);
   const create = useMutation(api.documents.create);
 
   const pathname = usePathname();
+  const params = useParams();
   const isMobile = useMediaQuery("(max-width: 768px)");
 
   const isResizingRef = useRef(false);
@@ -42,6 +48,9 @@ const Navigation = () => {
 
   const [isResetting, setIsResetting] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(isMobile);
+
+  const search = useSearch();
+  const settings = useSettings();
 
   useEffect(() => {
     if (isMobile) collapse();
@@ -148,8 +157,8 @@ const Navigation = () => {
         </div>
         <div>
           <UserItem />
-          <Item label="Search" icon={Search} isSearch onClick={() => {}} />
-          <Item label="Settings" icon={Settings} onClick={() => {}} />
+          <Item label="Search" icon={Search} isSearch onClick={search.onOpen} />
+          <Item label="Settings" icon={Settings} onClick={settings.onOpen} />
 
           <Item onClick={onCreate} label="New page" icon={PlusCircle} />
         </div>
@@ -167,7 +176,7 @@ const Navigation = () => {
               side={isMobile ? "bottom" : "right"}
               className="p-0 w-72"
             >
-              <p>Trash box</p>
+              <TrashBox />
             </PopoverContent>
           </Popover>
         </div>
@@ -185,15 +194,19 @@ const Navigation = () => {
           isMobile && "left-0 w-full"
         )}
       >
-        <nav className="bg-transparent px-3 py-2 w-full">
-          {isCollapsed && (
-            <MenuIcon
-              className="h-6 w-6 text-muted-foreground"
-              role="button"
-              onClick={resetWidth}
-            />
-          )}
-        </nav>
+        {!!params.documentId ? (
+          <Navbar isCollapsed={isCollapsed} onResetWidth={resetWidth} />
+        ) : (
+          <nav className="bg-transparent px-3 py-2 w-full">
+            {isCollapsed && (
+              <MenuIcon
+                className="h-6 w-6 text-muted-foreground"
+                role="button"
+                onClick={resetWidth}
+              />
+            )}
+          </nav>
+        )}
       </div>
     </>
   );
